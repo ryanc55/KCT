@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace KerbalConstructionTime
 {
@@ -145,7 +147,18 @@ namespace KerbalConstructionTime
             if (HighLogic.LoadedScene == GameScenes.SPACECENTER && (IsComplete() || !KCT_PresetManager.Instance.ActivePreset.generalSettings.KSCUpgradeTimes))
             {
                 if (ScenarioUpgradeableFacilities.Instance != null && KCT_GameStates.erroredDuringOnLoad.OnLoadFinished)
+                {
                     Upgrade();
+
+                    try
+                    {
+                        KCT_Events.onFacilityUpgradeComplete?.Fire(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+                }
             }
         }
 

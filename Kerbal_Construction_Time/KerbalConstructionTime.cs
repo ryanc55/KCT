@@ -463,6 +463,12 @@ namespace KerbalConstructionTime
                     yield break;
                 }
 
+                if (i == 1 && FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH)
+                {
+                    // Make sure that the vessel situation transitions from Prelaunch to Landed before airlaunching
+                    FlightGlobals.ActiveVessel.situation = Vessel.Situations.LANDED;
+                }
+
                 ScreenMessages.PostScreenMessage($"[KCT] Launching in {i}...", 1f, ScreenMessageStyle.UPPER_CENTER, XKCDColors.Red);
                 yield return wfsOne; // new WaitForSeconds(1);
             }

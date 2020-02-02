@@ -140,6 +140,16 @@ namespace KerbalConstructionTime
                     TimeWarp.SetRate(0, true);
                 if (protoNode == null) return;
                 EnableTech();
+
+                try
+                {
+                    KCT_Events.onTechCompleted?.Fire(protoNode);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+
                 KCT_GameStates.TechList.Remove(this);
                 if (KCT_PresetManager.PresetLoaded() && KCT_PresetManager.Instance.ActivePreset.generalSettings.TechUpgrades)
                     KCT_GameStates.MiscellaneousTempUpgrades++;

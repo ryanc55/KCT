@@ -176,10 +176,19 @@ namespace KerbalConstructionTime
 
                 if (Funding.CanAfford(cost))
                 {
-                    Funding.Instance.AddFunds(-cost, TransactionReasons.Structures);
+                    KCT_Utilities.SpendFunds(cost, TransactionReasons.Structures);
                     KCT_GameStates.ActiveKSC.KSCTech.Add(upgrading);
                     upgrading.SetBP(cost);
                     upgrading.cost = cost;
+
+                    try
+                    {
+                        KCT_Events.onFacilityUpgradeQueued?.Fire(upgrading);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
 
                     ScreenMessages.PostScreenMessage("Facility upgrade requested!", 4.0f, ScreenMessageStyle.UPPER_CENTER);
                     KCTDebug.Log($"Facility {facilityID} upgrade requested to lvl {oldLevel + 1} for {cost} funds, resulting in a BP of {upgrading.BP}");

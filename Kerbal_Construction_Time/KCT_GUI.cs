@@ -2100,6 +2100,14 @@ namespace KerbalConstructionTime
                     newPad.cost = curPadCost;
                     newPad.SetBP(curPadCost);
                     newPad.commonName = newName;
+                    try
+                    {
+                        KCT_Events.onFacilityUpgradeQueued?.Fire(newPad);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
                     KCT_GameStates.ActiveKSC.KSCTech.Add(newPad);
                 }
                 else

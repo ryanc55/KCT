@@ -11,9 +11,8 @@ using ToolbarControl_NS;
 
 namespace KerbalConstructionTime
 {
-    static class KCT_Utilities
+    public static class KCT_Utilities
     {
-
         public static Dictionary<String, int> PartListToDict(List<String> list)
         {
             Dictionary<String, int> newInv = new Dictionary<String, int>();
@@ -796,7 +795,7 @@ namespace KerbalConstructionTime
         {
             if (!CurrentGameIsCareer())
                 return 0;
-            KCTDebug.Log("Removing funds: " + toSpend + ", New total: " + (Funding.Instance.Funds - toSpend));
+            KCTDebug.Log($"Removing funds: {toSpend}, New total: {Funding.Instance.Funds - toSpend}");
             if (toSpend < Funding.Instance.Funds)
                 Funding.Instance.AddFunds(-toSpend, reason);
             return Funding.Instance.Funds;
@@ -806,7 +805,7 @@ namespace KerbalConstructionTime
         {
             if (!CurrentGameIsCareer())
                 return 0;
-            KCTDebug.Log("Adding funds: " + toAdd + ", New total: " + (Funding.Instance.Funds + toAdd));
+            KCTDebug.Log($"Adding funds: {toAdd}, New total: {Funding.Instance.Funds + toAdd}");
             Funding.Instance.AddFunds(toAdd, reason);
             return Funding.Instance.Funds;
         }

@@ -67,6 +67,10 @@ namespace KerbalConstructionTime
                 {
                     if (vessel.launchSiteID > idx) vessel.launchSiteID--;
                 }
+                foreach (KCT_UpgradingBuilding building in ksc.KSCTech)
+                {
+                    if (building.facilityType == SpaceCenterFacility.LaunchPad && building.launchpadID > idx) building.launchpadID--;
+                }
 
                 ksc.LaunchPads.RemoveAt(idx);
 

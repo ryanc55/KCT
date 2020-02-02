@@ -141,6 +141,32 @@ namespace KerbalConstructionTime
             orbit.UpdateFromStateVectors(teleportPosition, teleportVelocity, body, Planetarium.GetUniversalTime());
             vessel.SetOrbit(orbit);
             vessel.SetRotation(rotation);
+
+            ResetGroundContact(vessel);
+        }
+
+        /// <summary>
+        /// Makes sure that all parts reset their ground contact status.
+        /// This can sometimes stick when airlaunching and in turn cause issues.
+        /// </summary>
+        /// <param name="vessel"></param>
+        private static void ResetGroundContact(Vessel vessel)
+        {
+            if (vessel.parts == null) return;
+
+            for (int index = vessel.parts.Count - 1; index >= 0; --index)
+            {
+                var part = vessel.parts[index];
+                part.GroundContact = false;   // For stock
+
+                if (part.Modules.Contains("KSPWheelBase"))
+                {
+                    // With KSPWheel the landing gear status may not get properly reset on airlaunch
+                    var pm = part.Modules["KSPWheelBase"];
+                    pm.Fields.SetValue("grounded", false);
+                }
+            }
+
         }
     }
 }

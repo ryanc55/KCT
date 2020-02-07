@@ -1,5 +1,12 @@
 ChangeLog
 
+1.3.7.12
+	Thanks to user @siimav for the following:
+		Fix vessel Situation snapping to Landed on airlaunch
+		Add more custom events
+		Fix deleting a pad causing issues with other pad constructions
+		Fix vessel Situation snapping to Landed on airlaunch
+
 1.3.7.11
 	Updated AirlaunchLevels.cfg for stock tech
 
@@ -19,7 +26,7 @@ ChangeLog
 
 1.4.7.8
 	Fixed unnecessary int in KCT_GUI.cs
-		Thanks to user @siimav for the following:
+	Thanks to user @siimav for the following:
 		Make launchpads non-upgradeable and add option to delete them
 		Formula improvements & Airlaunch fix for KRASH
 		Note:  The following two are specific for RP-1

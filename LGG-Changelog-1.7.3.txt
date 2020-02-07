@@ -1,5 +1,12 @@
 ChangeLog
 
+1.4.6.23
+	Thanks to user @siimav for the following:
+		Fix vessel Situation snapping to Landed on airlaunch
+		Add more custom events
+		Fix deleting a pad causing issues with other pad constructions
+		Fix vessel Situation snapping to Landed on airlaunch
+
 1.4.6.22
 	Updated AirlaunchLevels.cfg for stock tech
 

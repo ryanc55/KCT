@@ -840,7 +840,7 @@ namespace KerbalConstructionTime
 
             double remainingBP = buildPoints + integrationPoints - progress;
             AddProgress(remainingBP * 0.1);
-            KCT_Utilities.SpendFunds(rushCost, TransactionReasons.None);
+            KCT_Utilities.SpendFunds(rushCost, TransactionReasons.VesselRollout);
             ++rushBuildClicks;
             this.rushCost = -1;    // force recalculation of rush cost
 

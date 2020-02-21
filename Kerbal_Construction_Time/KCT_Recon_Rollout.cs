@@ -263,7 +263,7 @@ namespace KerbalConstructionTime
                         }
                     }
                     else
-                        KCT_Utilities.SpendFunds(cost / 10 * steps, TransactionReasons.None);
+                        KCT_Utilities.SpendFunds(cost / 10 * steps, TransactionReasons.VesselRollout);
                 }
             }
         }

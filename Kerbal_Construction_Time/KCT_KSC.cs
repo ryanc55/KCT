@@ -289,7 +289,7 @@ namespace KerbalConstructionTime
             foreach (KCT_UpgradingBuilding buildingTech in KSCTech)
             {
                 ConfigNode bT = new ConfigNode("UpgradingBuilding");
-                bT = ConfigNode.CreateConfigFromObject(buildingTech, bT);
+                buildingTech.Save(bT);
                 upgradeables.AddNode(bT);
             }
             node.AddNode(upgradeables);
@@ -504,7 +504,7 @@ namespace KerbalConstructionTime
                 foreach (ConfigNode upBuild in tmp.GetNodes("UpgradingBuilding"))
                 {
                     KCT_UpgradingBuilding tempUP = new KCT_UpgradingBuilding();
-                    ConfigNode.LoadObjectFromConfig(tempUP, upBuild);
+                    tempUP.Load(upBuild);
                     KSCTech.Add(tempUP);
                 }
             }

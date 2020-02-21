@@ -140,7 +140,7 @@ namespace KerbalConstructionTime
             KCTDebug.Log($"Upgrading from level {oldLevel}");
 
             string facilityID = GetFacilityID();
-            SpaceCenterFacility facilityType = GetFacilityType();
+            SpaceCenterFacility? facilityType = GetFacilityType();
 
             string gate = GetTechGate(facilityID, oldLevel + 1);
             KCTDebug.Log("[KCTT] Gate for " + facilityID + "? " + gate);
@@ -232,7 +232,7 @@ namespace KerbalConstructionTime
             return getMember<SpaceCenterBuilding>("host").Facility.id;
         }
 
-        public SpaceCenterFacility GetFacilityType()
+        public SpaceCenterFacility? GetFacilityType()
         {
             var scb = getMember<SpaceCenterBuilding>("host");
             if (scb is AdministrationFacility) return SpaceCenterFacility.Administration;
@@ -245,7 +245,8 @@ namespace KerbalConstructionTime
             if (scb is TrackingStationBuilding) return SpaceCenterFacility.TrackingStation;
             if (scb is VehicleAssemblyBuilding) return SpaceCenterFacility.VehicleAssemblyBuilding;
 
-            throw new Exception($"Invalid facility type {scb.GetType().Name}");
+            // Some mods define custom facilities
+            return null;
         }
     }
 }

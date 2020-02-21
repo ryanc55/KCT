@@ -4,10 +4,11 @@ using UnityEngine;
 
 namespace KerbalConstructionTime
 {
-    public class KCT_UpgradingBuilding : IKCTBuildItem
+    public class KCT_UpgradingBuilding : IKCTBuildItem, IConfigNode
     {
         [Persistent]
-        public SpaceCenterFacility facilityType;
+        private string sFacilityType;   // Apparently KSP does not know how to persist nullable enums
+        public SpaceCenterFacility? facilityType;
         [Persistent]
         public int upgradeLevel, currentLevel, launchpadID = 0;
         [Persistent]
@@ -24,7 +25,7 @@ namespace KerbalConstructionTime
 
         }
 
-        public KCT_UpgradingBuilding(SpaceCenterFacility type, string facilityID, int newLevel, int oldLevel, string name)
+        public KCT_UpgradingBuilding(SpaceCenterFacility? type, string facilityID, int newLevel, int oldLevel, string name)
         {
             facilityType = type;
             id = facilityID;
@@ -162,9 +163,9 @@ namespace KerbalConstructionTime
             }
         }
 
-        public static double CalculateBP(double cost, SpaceCenterFacility facilityType)
+        public static double CalculateBP(double cost, SpaceCenterFacility? facilityType)
         {
-            int isAdm = 0, isAC = 0, isLP = 0, isMC = 0, isRD = 0, isRW = 0, isTS = 0, isSPH = 0, isVAB = 0;
+            int isAdm = 0, isAC = 0, isLP = 0, isMC = 0, isRD = 0, isRW = 0, isTS = 0, isSPH = 0, isVAB = 0, isOther = 0;
             switch (facilityType)
             {
                 case SpaceCenterFacility.Administration:
@@ -195,6 +196,7 @@ namespace KerbalConstructionTime
                     isVAB = 1;
                     break;
                 default:
+                    isOther = 1;
                     break;
             }
 
@@ -210,7 +212,8 @@ namespace KerbalConstructionTime
                 { "RW", isRW.ToString() },
                 { "TS", isTS.ToString() },
                 { "SPH", isSPH.ToString() },
-                { "VAB", isVAB.ToString() }
+                { "VAB", isVAB.ToString() },
+                { "Other", isOther.ToString() }
             };
 
             double bp = KCT_MathParsing.GetStandardFormulaValue("KSCUpgrade", variables);
@@ -219,12 +222,51 @@ namespace KerbalConstructionTime
             return bp;
         }
 
-        public static double CalculateBuildTime(double cost, SpaceCenterFacility facilityType, KCT_KSC KSC = null)
+        public static double CalculateBuildTime(double cost, SpaceCenterFacility? facilityType, KCT_KSC KSC = null)
         {
             double bp = CalculateBP(cost, facilityType);
             double rateTotal = KCT_Utilities.GetBothBuildRateSum(KSC ?? KCT_GameStates.ActiveKSC);
 
             return bp / rateTotal;
+        }
+
+        public void Load(ConfigNode node)
+        {
+            if (ConfigNode.LoadObjectFromConfig(this, node))
+            {
+                // KSP doesn't support automatically persisting nullable enum values.
+                // The following code is a workaround for that.
+                try
+                {
+                    string oldFacilityType = node.GetValue("facilityType");
+                    if (!string.IsNullOrEmpty(oldFacilityType))
+                    {
+                        // Some legacy saves may have facilityType enum directly persisted as a string value.
+                        facilityType = (SpaceCenterFacility)Enum.Parse(typeof(SpaceCenterFacility), oldFacilityType);
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrEmpty(sFacilityType))
+                        {
+                            facilityType = (SpaceCenterFacility)Enum.Parse(typeof(SpaceCenterFacility), sFacilityType);
+                        }
+                        else
+                        {
+                            facilityType = null;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+            }
+        }
+
+        public void Save(ConfigNode node)
+        {
+            sFacilityType = facilityType?.ToString();
+            ConfigNode.CreateConfigFromObject(this, node);
         }
 
         private void AddProgress(double amt)

@@ -1,5 +1,14 @@
 ChangeLog
 
+1.4.6.24
+	* Apparently there are mods that define custom KSC facility types. Those cannot currently be 
+	  resolved to the KSP SpaceCenterFacility enum and will cause facility upgrade attempts to fail.
+	  I made KCT_UpgradingBuilding.facilityType field nullable so that any custom facilities
+	  would just be null there. In the process I also found out that KSP is unable to automatically 
+	  persist nullable enums so a workaround had to be written for that.
+	* All spent funds that are related to vessel building & rollout are now logged under 
+	  TransactionReasons.VesselRollout.  This is rather important for RP-1 career logger.
+
 1.4.6.23
 	Thanks to user @siimav for the following:
 		Fix vessel Situation snapping to Landed on airlaunch

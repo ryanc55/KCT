@@ -135,6 +135,23 @@ namespace KerbalConstructionTime
                     inventorySample.Remove(p);
                 }
 
+                double effectiveCost1 = effectiveCost; // Since there can be more than one TestLite module per node
+                double invtmp = KCT_PresetManager.Instance.ActivePreset.timeSettings.InventoryEffect;
+                foreach (PartModule modNode in p.Modules)
+                {
+                    double runTime = 0;
+                    string s = modNode.moduleName;
+                    if (s == "ModuleTestLite" || s == "TestFlightCore")
+                    {
+                        if (s == "ModuleTestLite")
+                            runTime = (double)(modNode.Fields.GetValue("runTime"));
+                        else
+                            runTime = (double)(modNode.Fields.GetValue("operatingTime"));
+                        if (runTime > .01)
+                            effectiveCost = .5 * (1 + Math.Max(0, 1 - runTime / 10)) * effectiveCost1 * invtmp / 100;
+                    }
+                }
+
                 if (effectiveCost < 0) effectiveCost = 0;
                 totalEffectiveCost += effectiveCost;
             }
@@ -213,6 +230,23 @@ namespace KerbalConstructionTime
                 if (InvEff != 0)
                 {
                     inventorySample.Remove(p);
+                }
+
+                double effectiveCost1 = effectiveCost; // Since there can be more than one TestLite module per node
+                double invtmp = KCT_PresetManager.Instance.ActivePreset.timeSettings.InventoryEffect;
+                foreach (ConfigNode modNode in GetModulesFromPartNode(p))
+                {
+                    double runTime = 0;
+                    string s = modNode.GetValue("name");
+                    if (s == "ModuleTestLite" || s == "TestFlightCore")
+                    {
+                        if (s == "ModuleTestLite")
+                            double.TryParse(modNode.GetValue("runTime"), out runTime);
+                        else
+                            double.TryParse(modNode.GetValue("operatingTime"), out runTime);
+                        if (runTime > .01)
+                            effectiveCost = .5 * (1 + Math.Max(0, 1 - runTime / 10)) * effectiveCost1 * invtmp / 100;
+                    }
                 }
 
                 if (effectiveCost < 0) effectiveCost = 0;

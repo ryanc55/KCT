@@ -148,11 +148,7 @@ namespace KerbalConstructionTime
                         else
                             runTime = (double)(modNode.Fields.GetValue("operatingTime"));
                         if (runTime > .01)
-                        {
-                            Debug.Log("[KCT] " + "Engine RunTime: " + runTime.ToString());
-                            Debug.Log("[KCT] " + "Refub Credit: " + KCT_MathParsing.ParseEngineRefurbFormula(runTime).ToString());
                             effectiveCost = KCT_MathParsing.ParseEngineRefurbFormula(runTime) * effectiveCost1 * invtmp / 100;
-                        }
                     }
                 }
 
@@ -249,11 +245,7 @@ namespace KerbalConstructionTime
                         else
                             double.TryParse(modNode.GetValue("operatingTime"), out runTime);
                         if (runTime > .01)
-                        {
-                            Debug.Log("[KCT] " + "Engine RunTime: " + runTime.ToString());
-                            Debug.Log("[KCT] " + "Refub Credit: " + KCT_MathParsing.ParseEngineRefurbFormula(runTime).ToString());
                             effectiveCost = KCT_MathParsing.ParseEngineRefurbFormula(runTime) * effectiveCost1 * invtmp / 100;
-                        }
                     }
                 }
 

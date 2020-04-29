@@ -167,4 +167,4 @@ $RECYCLE.BIN/
 .bak
 .gitignore
 # DLL files
-#*.dll
+*.dll

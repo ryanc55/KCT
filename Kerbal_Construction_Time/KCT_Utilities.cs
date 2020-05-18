@@ -83,12 +83,15 @@ namespace KerbalConstructionTime
 
         public static double GetEffectiveCost(List<Part> parts)
         {
+
             //get list of parts that are in the inventory
             IList<Part> inventorySample = ScrapYardWrapper.GetPartsInInventory(parts, ScrapYardWrapper.ComparisonStrength.STRICT) ?? new List<Part>();
 
             double totalEffectiveCost = 0;
 
             List<string> globalVariables = new List<string>();
+            bool newShip = IsShipNew();
+            double globalMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetGlobalVariable(globalVariables);
 
             foreach (Part p in parts)
             {
@@ -135,15 +138,46 @@ namespace KerbalConstructionTime
                     inventorySample.Remove(p);
                 }
 
+                if (KCT_GameStates.EditorShipEditingMode) 
+                {
+                    if (!newShip)
+                    {
+                        double originalcost;
+                        if (KCT_GUI.OriginalParts.TryGetValue(p.persistentId, out originalcost))
+                        {
+                            Debug.Log($"[RyanKCT] Deducted {originalcost} from {p.persistentId}");
+                             KCT_GUI.OriginalCostNow += Math.Max(effectiveCost,originalcost) * globalMultiplier;
+                            effectiveCost -= originalcost;
+                        }
+                        Debug.Log($"[RyanKCT] Part: {p.name} ID: {p.persistentId} Effective Cost {effectiveCost} ");
+
+                    }
+                }
+
                 if (effectiveCost < 0) effectiveCost = 0;
                 totalEffectiveCost += effectiveCost;
             }
 
-            double globalMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetGlobalVariable(globalVariables);
-
             return totalEffectiveCost * globalMultiplier;
         }
 
+        private static bool IsShipNew()
+        {
+            if (KCT_GameStates.EditorShipEditingMode)
+            {
+                if (KCT_GUI.OriginalParts.Count == 0)
+                {
+                    KCT_GUI.OriginalCost = 0;
+                    return true;
+                }
+                else
+                {
+                    KCT_GUI.OriginalCostNow = 0;
+                    return false;
+                }
+            } else { return false; }
+
+        }
         public static double GetEffectiveCost(List<ConfigNode> parts)
         {
             //get list of parts that are in the inventory
@@ -151,6 +185,9 @@ namespace KerbalConstructionTime
 
             double totalEffectiveCost = 0;
             List<string> globalVariables = new List<string>();
+            bool newShip = IsShipNew();
+            double globalMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetGlobalVariable(globalVariables);
+
             foreach (ConfigNode p in parts)
             {
                 string name = PartNameFromNode(p);
@@ -168,6 +205,7 @@ namespace KerbalConstructionTime
                 double PartMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetPartVariable(raw_name);
                 List<string> moduleNames = new List<string>();
                 bool hasResourceCostMult = true;
+
                 foreach (ConfigNode modNode in GetModulesFromPartNode(p))
                 {
                     string s = modNode.GetValue("name");
@@ -215,11 +253,35 @@ namespace KerbalConstructionTime
                     inventorySample.Remove(p);
                 }
 
+                if (KCT_GameStates.EditorShipEditingMode)
+                {
+                    uint pId = 0;
+                    uint.TryParse(p.GetValue("persistentId"), out pId);
+                    if (newShip) 
+                    {
+                        KCT_GUI.OriginalParts.Add(pId , effectiveCost);
+                        Debug.Log("[RyanKCT] " + "AddPart Node: " + p.name.ToString() + " " + pId.ToString());
+                        KCT_GUI.OriginalCost += effectiveCost * globalMultiplier;
+                        effectiveCost = 0;
+                    }
+                    else
+                    {
+                        double originalcost;
+                        if (KCT_GUI.OriginalParts.TryGetValue(pId, out originalcost))
+                        {
+                            Debug.Log($"[RyanKCT] Deducted Node: {originalcost} from {pId}");
+                            KCT_GUI.OriginalCostNow += Math.Max(effectiveCost,originalcost) * globalMultiplier;
+                            effectiveCost -= originalcost;
+                        }
+                        Debug.Log($"[RyanKCT] Part: {p.name} ID: {pId} Effective Cost {effectiveCost} ");
+
+                    }
+                }
+
                 if (effectiveCost < 0) effectiveCost = 0;
                 totalEffectiveCost += effectiveCost;
+               // Debug.Log($"[RyanKCT] totalEffectiveCost: {totalEffectiveCost} BP: {GetBuildTime(totalEffectiveCost)}  ");
             }
-
-            double globalMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetGlobalVariable(globalVariables);
 
             return totalEffectiveCost * globalMultiplier;
         }
@@ -894,12 +956,24 @@ namespace KerbalConstructionTime
 
             double effCost = GetEffectiveCost(EditorLogic.fetch.ship.Parts);
             double bp = GetBuildTime(effCost);
-            KCT_BuildListVessel blv = new KCT_BuildListVessel(EditorLogic.fetch.ship, launchSite, effCost, bp, EditorLogic.FlagURL);
-            blv.shipName = EditorLogic.fetch.shipNameField.text;
      
-            return AddVesselToBuildList(blv);
+            return AddVesselToBuildList(launchSite, bp);
         }
 
+        public static KCT_BuildListVessel AddVesselToBuildList(string launchSite, double bp)
+        {
+            if (string.IsNullOrEmpty(launchSite))
+            {
+                launchSite = EditorLogic.fetch.launchSiteName;
+            }
+
+            double effCost = GetEffectiveCost(EditorLogic.fetch.ship.Parts);
+            KCT_BuildListVessel blv = new KCT_BuildListVessel(EditorLogic.fetch.ship, launchSite, effCost, bp, EditorLogic.FlagURL);
+            Debug.Log($"[RyanKCT] Building ef: {effCost}  bp: {bp}");
+            blv.shipName = EditorLogic.fetch.shipNameField.text;
+
+            return AddVesselToBuildList(blv);
+        }
         public static KCT_BuildListVessel AddVesselToBuildList(KCT_BuildListVessel blv)
         {
             if (CurrentGameIsCareer())

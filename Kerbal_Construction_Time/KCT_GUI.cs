@@ -28,7 +28,7 @@ namespace KerbalConstructionTime
 
         private static Rect iconPosition = new Rect(Screen.width / 4, Screen.height - 30, 50, 30);//110
         private static Rect mainWindowPosition = new Rect(Screen.width / 3.5f, Screen.height / 3.5f, 350, 200);
-        public static Rect editorWindowPosition = new Rect(Screen.width / 3.5f, Screen.height / 3.5f, 275, 135);
+        public static Rect editorWindowPosition = new Rect(Screen.width / 3.5f, Screen.height / 3.5f, 325, 135);
         private static Rect SOIAlertPosition = new Rect(Screen.width / 3, Screen.height / 3, 250, 100);
 
         public static Rect centralWindowPosition = new Rect((Screen.width - 150) / 2, (Screen.height - 50) / 2, 150, 50);
@@ -338,6 +338,9 @@ namespace KerbalConstructionTime
         public static string buildRateForDisplay;
         private static int rateIndexHolder = 0;
         public static Dictionary<string, int> PartsInUse = new Dictionary<string, int>();
+        public static Dictionary<uint, double> OriginalParts = new Dictionary<uint, double>();
+        public static double OriginalCost = 0;
+        public static double OriginalCostNow = 0;
         private static double finishedShipBP = -1;
         public static void DrawEditorGUI(int windowID)
         {
@@ -345,9 +348,9 @@ namespace KerbalConstructionTime
             {
                 return;
             }
-            if (editorWindowPosition.width < 275) //the size keeps getting changed for some reason, so this will avoid that
+            if (editorWindowPosition.width < 325) //the size keeps getting changed for some reason, so this will avoid that
             {
-                editorWindowPosition.width = 275;
+                editorWindowPosition.width = 325;
                 editorWindowPosition.height = 1;
             }
             GUILayout.BeginVertical();
@@ -435,33 +438,51 @@ namespace KerbalConstructionTime
                 if (showInventory) //The part inventory is not shown in the editor mode
                 {
                     showInventory = false;
-                    editorWindowPosition.width = 275;
+                    editorWindowPosition.width = 375;
                     editorWindowPosition.height = 1;
                 }
 
                 KCT_BuildListVessel ship = KCT_GameStates.editedVessel;
-                if (finishedShipBP < 0 && ship.isFinished)
+                if (finishedShipBP < 0)
                 {
-                    // If ship is finished, then both build and integration times can be refreshed with newly calculated values
-                    finishedShipBP = KCT_Utilities.GetBuildTime(ship.ExtractedPartNodes);
-                    ship.buildPoints = finishedShipBP;
-                    ship.integrationPoints = KCT_MathParsing.ParseIntegrationTimeFormula(ship);
+                    if (ship.isFinished)
+                    {
+                        // If ship is finished, then both build and integration times can be refreshed with newly calculated values
+                        finishedShipBP = KCT_Utilities.GetBuildTime(ship.ExtractedPartNodes);
+                        ship.buildPoints = finishedShipBP;
+                        ship.integrationPoints = KCT_MathParsing.ParseIntegrationTimeFormula(ship);
+                    }
+                    else {
+                        // Initialize original list of part costs.  Need to do this from saved nodes as initial VAB values for proc parts are wrong.
+                        finishedShipBP = KCT_Utilities.GetBuildTime(ship.ExtractedPartNodes);
+                    }
                 }
-
                 double origBP = ship.isFinished ? finishedShipBP : ship.buildPoints;
-                origBP += ship.integrationPoints;
-                double buildTime = KCT_GameStates.EditorBuildTime + KCT_GameStates.EditorIntegrationTime;
-                double difference = Math.Abs(buildTime - origBP);
+                double origBT = origBP + ship.integrationPoints;
+                double newBP = KCT_GameStates.EditorBuildTime;
+                double newBuildTime = newBP + KCT_GameStates.EditorIntegrationTime;
                 double progress;
-                if (ship.isFinished) progress = origBP;
+                if (ship.isFinished) progress = origBT;
                 else progress = ship.progress;
-                double newProgress = Math.Max(0, progress - (1.1 * difference));
-                GUILayout.Label($"Original: {Math.Max(0, Math.Round(100 * (progress / origBP), 2))}%");
-                GUILayout.Label($"Edited: {Math.Round(100 * newProgress / buildTime, 2)}%");
+                double OriginalTimeLeft = origBT - progress;
+                OriginalTimeLeft *= (OriginalCost == 0) ? 1 : (OriginalCostNow / (OriginalCost));
+
+                //Allow small tweaks without invoking new build formuala
+                double startupBP = Math.Max(.001,KCT_Utilities.GetBuildTime(0));
+                if (newBP - startupBP < 86400)
+                {
+                    newBuildTime = (newBP - startupBP) * 3;  //TODO: Fix this to be reference build+integration time.
+                }
+                //Debug.Log($"[RyanKCT] newBuildTime {newBuildTime}  startupBuildTime: {startupBuildTime}");
+                double OriginalBPLeft = origBP / origBT * OriginalTimeLeft;  //TODO: fix for non-linear Integration time formula
+
+                //double newProgress = Math.Max(0, progress - (1.1 * Math.Abs(origBP - progress)));
+                //GUILayout.Label($"Original: {Math.Max(0, Math.Round(100 * (progress / origBP), 2))}%");
+                //GUILayout.Label($"Edited: {Math.Round(100 * newProgress / buildTime, 2)}%");
 
                 KCT_BuildListVessel.ListType type = EditorLogic.fetch.launchSiteName == "LaunchPad" ? KCT_BuildListVessel.ListType.VAB : KCT_BuildListVessel.ListType.SPH;
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Build Time at ");
+                GUILayout.Label("Build Times at ");
                 if (buildRateForDisplay == null) buildRateForDisplay = KCT_Utilities.GetBuildRate(0, type, null).ToString();
                 buildRateForDisplay = GUILayout.TextField(buildRateForDisplay, GUILayout.Width(75));
                 GUILayout.Label(" BP/s:");
@@ -478,7 +499,25 @@ namespace KerbalConstructionTime
                         buildRateForDisplay = bR.ToString();
                     }
                     GUILayout.EndHorizontal();
-                    GUILayout.Label(MagiCore.Utilities.GetFormattedTime(Math.Abs(buildTime - newProgress) / bR));
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Original:", GUILayout.Width(50));
+                    if (OriginalTimeLeft <= 0)
+                    {
+                        GUILayout.Label($"Complete.");
+                    }
+                    else
+                    {
+                        GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime(OriginalTimeLeft / bR)}");
+                    }
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Added:", GUILayout.Width(50));
+                    GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime(newBuildTime / bR)}");
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label($"Total:", GUILayout.Width(50));
+                    GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime((OriginalTimeLeft + newBuildTime) / bR)}");
+                    GUILayout.EndHorizontal();
                 }
                 else
                 {
@@ -492,7 +531,7 @@ namespace KerbalConstructionTime
 
                     finishedShipBP = -1;
                     KCT_Utilities.AddFunds(ship.GetTotalCost(), TransactionReasons.VesselRollout);
-                    KCT_BuildListVessel newShip = KCT_Utilities.AddVesselToBuildList();
+                    KCT_BuildListVessel newShip = KCT_Utilities.AddVesselToBuildList("", KCT_GameStates.EditorBuildTime + OriginalBPLeft);//TODO
                     if (newShip == null)
                     {
                         KCT_Utilities.SpendFunds(ship.GetTotalCost(), TransactionReasons.VesselRollout);
@@ -500,7 +539,7 @@ namespace KerbalConstructionTime
                     }
 
                     ship.RemoveFromBuildList();
-                    newShip.progress = newProgress;
+                    newShip.progress = 0;
                     newShip.rushBuildClicks = ship.rushBuildClicks;
                     KCTDebug.Log("Finished? " + ship.isFinished);
                     if (ship.isFinished)
@@ -509,6 +548,7 @@ namespace KerbalConstructionTime
                     GamePersistence.SaveGame("persistent", HighLogic.SaveFolder, SaveMode.OVERWRITE);
 
                     KCT_GameStates.EditorShipEditingMode = false;
+                    OriginalParts.Clear();
 
                     InputLockManager.RemoveControlLock("KCTEditExit");
                     InputLockManager.RemoveControlLock("KCTEditLoad");
@@ -523,6 +563,7 @@ namespace KerbalConstructionTime
                 {
                     KCTDebug.Log("Edits cancelled.");
                     finishedShipBP = -1;
+                    OriginalParts.Clear();
                     KCT_GameStates.EditorShipEditingMode = false;
 
                     InputLockManager.RemoveControlLock("KCTEditExit");

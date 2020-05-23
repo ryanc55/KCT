@@ -342,6 +342,7 @@ namespace KerbalConstructionTime
             EffectivePartFormula = "min([C]/([I] + ([B]*([U]+1))) *[MV]*[PV], [C])",
             ProceduralPartFormula = "(([C]-[A]) + ([A]*10/max([I],1))) / max([B]*([U]+1),1) *[MV]*[PV]",
             BPFormula = "([E]^(1/2))*2000*[O]",
+            EditBPFormula = "1/3*(min(1,([E]/1000))*400000 + (([E]^0.85)*2250))",
             KSCUpgradeFormula = "([C]^(1/2))*1000*[O]",
             ReconditioningFormula = "min([M]*[O]*[E], [X])*abs([RE]-[S])",
             BuildRateFormula = "(([I]+1)*0.05*[N] + max(0.1-[I], 0))*sign(2*[L]-[I]+1)",

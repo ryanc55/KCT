@@ -81,6 +81,17 @@ namespace KerbalConstructionTime
             return finalBP;
         }
 
+        public static double GetEditTime(double totalEffectiveCost)
+        {
+            var formulaParams = new Dictionary<string, string>()
+            {
+                { "E", totalEffectiveCost.ToString() },
+                { "O", KCT_PresetManager.Instance.ActivePreset.timeSettings.OverallMultiplier.ToString() }
+            };
+            double finalBP = KCT_MathParsing.GetStandardFormulaValue("EditBP", formulaParams);
+            return finalBP;
+        }
+
         public static double GetEffectiveCost(List<Part> parts)
         {
 
@@ -145,11 +156,11 @@ namespace KerbalConstructionTime
                         double originalcost;
                         if (KCT_GUI.OriginalParts.TryGetValue(p.persistentId, out originalcost))
                         {
-                            Debug.Log($"[RyanKCT] Deducted {originalcost} from {p.persistentId}");
+                           // Debug.Log($"[RyanKCT] Deducted {originalcost} from {p.persistentId}");
                              KCT_GUI.OriginalCostNow += Math.Max(effectiveCost,originalcost) * globalMultiplier;
                             effectiveCost -= originalcost;
                         }
-                        Debug.Log($"[RyanKCT] Part: {p.name} ID: {p.persistentId} Effective Cost {effectiveCost} ");
+                        //Debug.Log($"[RyanKCT] Part: {p.name} ID: {p.persistentId} Effective Cost {effectiveCost} ");
 
                     }
                 }
@@ -260,7 +271,7 @@ namespace KerbalConstructionTime
                     if (newShip) 
                     {
                         KCT_GUI.OriginalParts.Add(pId , effectiveCost);
-                        Debug.Log("[RyanKCT] " + "AddPart Node: " + p.name.ToString() + " " + pId.ToString());
+                       // Debug.Log("[RyanKCT] " + "AddPart Node: " + p.name.ToString() + " " + pId.ToString());
                         KCT_GUI.OriginalCost += effectiveCost * globalMultiplier;
                         effectiveCost = 0;
                     }
@@ -269,11 +280,11 @@ namespace KerbalConstructionTime
                         double originalcost;
                         if (KCT_GUI.OriginalParts.TryGetValue(pId, out originalcost))
                         {
-                            Debug.Log($"[RyanKCT] Deducted Node: {originalcost} from {pId}");
+                            //Debug.Log($"[RyanKCT] Deducted Node: {originalcost} from {pId}");
                             KCT_GUI.OriginalCostNow += Math.Max(effectiveCost,originalcost) * globalMultiplier;
                             effectiveCost -= originalcost;
                         }
-                        Debug.Log($"[RyanKCT] Part: {p.name} ID: {pId} Effective Cost {effectiveCost} ");
+                        //Debug.Log($"[RyanKCT] Part: {p.name} ID: {pId} Effective Cost {effectiveCost} ");
 
                     }
                 }
@@ -969,7 +980,7 @@ namespace KerbalConstructionTime
 
             double effCost = GetEffectiveCost(EditorLogic.fetch.ship.Parts);
             KCT_BuildListVessel blv = new KCT_BuildListVessel(EditorLogic.fetch.ship, launchSite, effCost, bp, EditorLogic.FlagURL);
-            Debug.Log($"[RyanKCT] Building ef: {effCost}  bp: {bp}");
+            //Debug.Log($"[RyanKCT] Building ef: {effCost}  bp: {bp} Progress: {blv.progress}");
             blv.shipName = EditorLogic.fetch.shipNameField.text;
 
             return AddVesselToBuildList(blv);
@@ -1372,9 +1383,19 @@ namespace KerbalConstructionTime
             }
 
             double effCost = GetEffectiveCost(ship.Parts);
-            KCT_GameStates.EditorBuildTime = GetBuildTime(effCost);
-            var kctVessel = new KCT_BuildListVessel(ship, EditorLogic.fetch.launchSiteName, effCost, KCT_GameStates.EditorBuildTime, EditorLogic.FlagURL);
+       
+            if (KCT_GameStates.EditorShipEditingMode)
+            {
+                KCT_GameStates.EditorBuildTime = GetEditTime(effCost);
+            }
+            else
+            {
+                KCT_GameStates.EditorBuildTime = GetBuildTime(effCost);
+            }
+ 
 
+            var kctVessel = new KCT_BuildListVessel(ship, EditorLogic.fetch.launchSiteName, effCost, KCT_GameStates.EditorBuildTime, EditorLogic.FlagURL);
+            
             KCT_GameStates.EditorIntegrationTime = KCT_MathParsing.ParseIntegrationTimeFormula(kctVessel);
             KCT_GameStates.EditorRolloutCosts = KCT_MathParsing.ParseRolloutCostFormula(kctVessel);
             KCT_GameStates.EditorIntegrationCosts = KCT_MathParsing.ParseIntegrationCostFormula(kctVessel);

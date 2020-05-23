@@ -21,6 +21,7 @@ namespace KerbalConstructionTime
                 case "EffectivePart": return MathParsing.ParseMath("KCT_EFFECTIVE_PART", KCT_PresetManager.Instance.ActivePreset.formulaSettings.EffectivePartFormula, variables);
                 case "ProceduralPart": return MathParsing.ParseMath("KCT_PROCEDURAL_PART", KCT_PresetManager.Instance.ActivePreset.formulaSettings.ProceduralPartFormula, variables);
                 case "BP": return MathParsing.ParseMath("KCT_BP", KCT_PresetManager.Instance.ActivePreset.formulaSettings.BPFormula, variables);
+                case "EditBP": return MathParsing.ParseMath("KCT_EDITBP", KCT_PresetManager.Instance.ActivePreset.formulaSettings.EditBPFormula, variables);
                 case "KSCUpgrade": return MathParsing.ParseMath("KCT_KSC_UPGRADE", KCT_PresetManager.Instance.ActivePreset.formulaSettings.KSCUpgradeFormula, variables);
                 case "Reconditioning": return MathParsing.ParseMath("KCT_RECONDITIONING", KCT_PresetManager.Instance.ActivePreset.formulaSettings.ReconditioningFormula, variables);
                 case "BuildRate": return MathParsing.ParseMath("KCT_BUILD_RATE", KCT_PresetManager.Instance.ActivePreset.formulaSettings.BuildRateFormula, variables);

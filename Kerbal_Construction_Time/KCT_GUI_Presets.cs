@@ -206,6 +206,11 @@ namespace KerbalConstructionTime
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
+                GUILayout.Label("EditBPFormula: ");
+                WorkingPreset.formulaSettings.EditBPFormula = GUILayout.TextField(WorkingPreset.formulaSettings.EditBPFormula, GUILayout.Width(textWidth));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("KSCUpgrade: ");
                 WorkingPreset.formulaSettings.KSCUpgradeFormula = GUILayout.TextField(WorkingPreset.formulaSettings.KSCUpgradeFormula, GUILayout.Width(textWidth));
                 GUILayout.EndHorizontal();

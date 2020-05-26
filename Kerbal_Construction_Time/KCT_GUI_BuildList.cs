@@ -1227,9 +1227,10 @@ namespace KerbalConstructionTime
                 KCT_GameStates.EditorShipEditingMode = true;
 
                 InputLockManager.SetControlLock(ControlTypes.EDITOR_EXIT, "KCTEditExit");
-                InputLockManager.SetControlLock(ControlTypes.EDITOR_LOAD, "KCTEditLoad");
+//                InputLockManager.SetControlLock(ControlTypes.EDITOR_LOAD, "KCTEditLoad");
                 InputLockManager.SetControlLock(ControlTypes.EDITOR_NEW, "KCTEditNew");
                 InputLockManager.SetControlLock(ControlTypes.EDITOR_LAUNCH, "KCTEditLaunch");
+                InputLockManager.SetControlLock(ControlTypes.EDITOR_UNDO_REDO, "KCTEditUndo");
 
                 EditorDriver.StartAndLoadVessel(tempFile, b.type == KCT_BuildListVessel.ListType.VAB ? EditorFacility.VAB : EditorFacility.SPH);
             }

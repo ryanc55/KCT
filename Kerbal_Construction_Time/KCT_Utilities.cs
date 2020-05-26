@@ -153,14 +153,12 @@ namespace KerbalConstructionTime
                 {
                     if (!newShip)
                     {
-                        double originalcost;
-                        if (KCT_GUI.OriginalParts.TryGetValue(p.persistentId, out originalcost))
+                        double originalCost;
+                        if (KCT_GUI.OriginalParts.TryGetValue(p.persistentId, out originalCost))
                         {
-                           // Debug.Log($"[RyanKCT] Deducted {originalcost} from {p.persistentId}");
-                             KCT_GUI.OriginalCostNow += Math.Max(effectiveCost,originalcost) * globalMultiplier;
-                            effectiveCost -= originalcost;
+                             KCT_GUI.originalCostNow += Math.Min(effectiveCost,originalCost) * globalMultiplier;
+                            effectiveCost -= originalCost;
                         }
-                        //Debug.Log($"[RyanKCT] Part: {p.name} ID: {p.persistentId} Effective Cost {effectiveCost} ");
 
                     }
                 }
@@ -178,12 +176,12 @@ namespace KerbalConstructionTime
             {
                 if (KCT_GUI.OriginalParts.Count == 0)
                 {
-                    KCT_GUI.OriginalCost = 0;
+                    KCT_GUI.originalCost = 0;
                     return true;
                 }
                 else
                 {
-                    KCT_GUI.OriginalCostNow = 0;
+                    KCT_GUI.originalCostNow = 0;
                     return false;
                 }
             } else { return false; }
@@ -272,17 +270,17 @@ namespace KerbalConstructionTime
                     {
                         KCT_GUI.OriginalParts.Add(pId , effectiveCost);
                        // Debug.Log("[RyanKCT] " + "AddPart Node: " + p.name.ToString() + " " + pId.ToString());
-                        KCT_GUI.OriginalCost += effectiveCost * globalMultiplier;
-                        effectiveCost = 0;
+                        KCT_GUI.originalCost += effectiveCost * globalMultiplier;
+                        //effectiveCost = 0;
                     }
                     else
                     {
-                        double originalcost;
-                        if (KCT_GUI.OriginalParts.TryGetValue(pId, out originalcost))
+                        double originalCost;
+                        if (KCT_GUI.OriginalParts.TryGetValue(pId, out originalCost))
                         {
-                            //Debug.Log($"[RyanKCT] Deducted Node: {originalcost} from {pId}");
-                            KCT_GUI.OriginalCostNow += Math.Max(effectiveCost,originalcost) * globalMultiplier;
-                            effectiveCost -= originalcost;
+                            //Debug.Log($"[RyanKCT] Deducted Node: {originalCost} from {pId}");
+                            KCT_GUI.originalCostNow += Math.Max(effectiveCost,originalCost) * globalMultiplier;
+                            effectiveCost -= originalCost;
                         }
                         //Debug.Log($"[RyanKCT] Part: {p.name} ID: {pId} Effective Cost {effectiveCost} ");
 
@@ -979,8 +977,17 @@ namespace KerbalConstructionTime
             }
 
             double effCost = GetEffectiveCost(EditorLogic.fetch.ship.Parts);
+            return AddVesselToBuildList(launchSite, bp, effCost);
+        }
+
+        public static KCT_BuildListVessel AddVesselToBuildList(string launchSite, double bp, double effCost)
+        {
+            if (string.IsNullOrEmpty(launchSite))
+            {
+                launchSite = EditorLogic.fetch.launchSiteName;
+            }
+
             KCT_BuildListVessel blv = new KCT_BuildListVessel(EditorLogic.fetch.ship, launchSite, effCost, bp, EditorLogic.FlagURL);
-            //Debug.Log($"[RyanKCT] Building ef: {effCost}  bp: {bp} Progress: {blv.progress}");
             blv.shipName = EditorLogic.fetch.shipNameField.text;
 
             return AddVesselToBuildList(blv);

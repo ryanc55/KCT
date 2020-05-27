@@ -338,7 +338,12 @@ namespace KerbalConstructionTime
         public static string buildRateForDisplay;
         private static int rateIndexHolder = 0;
         public static Dictionary<string, int> PartsInUse = new Dictionary<string, int>();
-        public static Dictionary<uint, double> OriginalParts = new Dictionary<uint, double>();
+        public class PartData 
+        {
+            public double effCost;
+            public string name;
+        } 
+        public static Dictionary<uint, PartData> OriginalParts = new Dictionary<uint, PartData>();
         public static double originalCost = -1;
         public static double originalCostNow = 0;
         private static double originalCostLast = 1;
@@ -530,7 +535,7 @@ namespace KerbalConstructionTime
 
                     finishedShipBP = -1;
                     KCT_Utilities.AddFunds(ship.GetTotalCost(), TransactionReasons.VesselRollout);
-                    double effCost = originalCostNow + KCT_Utilities.GetEffectiveCost(EditorLogic.fetch.ship.Parts);
+                    double effCost = originalCostNow - originalCost + KCT_Utilities.GetEffectiveCost(EditorLogic.fetch.ship.Parts);
                     KCT_BuildListVessel newShip = KCT_Utilities.AddVesselToBuildList("", newBP + origBPRemaining + oldEditPenalty, effCost);
                     if (newShip == null)
                     {
@@ -551,10 +556,8 @@ namespace KerbalConstructionTime
                     OriginalParts.Clear();
 
                     InputLockManager.RemoveControlLock("KCTEditExit");
-//                    InputLockManager.RemoveControlLock("KCTEditLoad");
                     InputLockManager.RemoveControlLock("KCTEditNew");
                     InputLockManager.RemoveControlLock("KCTEditLaunch");
-                    InputLockManager.RemoveControlLock("KCTEditUndo");
                     EditorLogic.fetch.Unlock("KCTEditorMouseLock");
                     KCTDebug.Log("Edits saved.");
 
@@ -568,10 +571,8 @@ namespace KerbalConstructionTime
                     KCT_GameStates.EditorShipEditingMode = false;
 
                     InputLockManager.RemoveControlLock("KCTEditExit");
-//                   InputLockManager.RemoveControlLock("KCTEditLoad");
                     InputLockManager.RemoveControlLock("KCTEditNew");
                     InputLockManager.RemoveControlLock("KCTEditLaunch");
-                    InputLockManager.RemoveControlLock("KCTEditUndo");
                     EditorLogic.fetch.Unlock("KCTEditorMouseLock");
 
                     ScrapYardWrapper.ProcessVessel(KCT_GameStates.editedVessel.ExtractedPartNodes);

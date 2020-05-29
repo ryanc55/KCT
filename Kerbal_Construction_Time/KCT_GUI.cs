@@ -351,9 +351,9 @@ namespace KerbalConstructionTime
         private static double origBT = 0;
         private static double finishedShipBP = -1;
         private static double originalTimeLeft = 0;
-        private static double origBPRemaining = 0;
+        public static double origBPRemaining = 0;
         private static double percentRemaining = 1;
-        private static double oldEditPenalty = 0;
+        public static double oldEditPenalty = 0;
         public static void DrawEditorGUI(int windowID)
         {
             if (EditorLogic.fetch == null)
@@ -535,7 +535,7 @@ namespace KerbalConstructionTime
 
                     finishedShipBP = -1;
                     KCT_Utilities.AddFunds(ship.GetTotalCost(), TransactionReasons.VesselRollout);
-                    double effCost = originalCostNow - originalCost + KCT_Utilities.GetEffectiveCost(EditorLogic.fetch.ship.Parts);
+                    double effCost = originalCostNow + KCT_Utilities.GetEffectiveCost(EditorLogic.fetch.ship.Parts);
                     KCT_BuildListVessel newShip = KCT_Utilities.AddVesselToBuildList("", newBP + origBPRemaining + oldEditPenalty, effCost);
                     if (newShip == null)
                     {

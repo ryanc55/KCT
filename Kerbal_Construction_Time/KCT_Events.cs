@@ -83,7 +83,7 @@ namespace KerbalConstructionTime
         // The following was changed to a function because the Mono compiler available on Linux was causing errors with this call
         void OnSYInventoryAppliedToPart(Part p)
         {
-            KerbalConstructionTime.instance.editorRecalcuationRequired = true;
+            KerbalConstructionTime.instance.editorRecalcuationRequired = 1;
         }
 
         // The following was changed to a function because the Mono compiler available on Linux was causing errors with this call
@@ -218,7 +218,7 @@ namespace KerbalConstructionTime
             KCTDebug.Log("Inventory was applied. Recalculating.");
             if (HighLogic.LoadedSceneIsEditor)
             {
-                KerbalConstructionTime.instance.editorRecalcuationRequired = true;
+                KerbalConstructionTime.instance.editorRecalcuationRequired = 1;
             }
         }
 
@@ -243,22 +243,22 @@ namespace KerbalConstructionTime
 
         private void ShipModifiedEvent(ShipConstruct vessel)
         {
-            KerbalConstructionTime.instance.editorRecalcuationRequired = true;
+            KerbalConstructionTime.instance.editorRecalcuationRequired = 2;
         }
 
         private void StageCountChangedEvent(int num)
         {
-            KerbalConstructionTime.instance.editorRecalcuationRequired = true;
+            KerbalConstructionTime.instance.editorRecalcuationRequired = 1;
         }
 
         private void StagingOrderChangedEvent()
         {
-            KerbalConstructionTime.instance.editorRecalcuationRequired = true;
+            KerbalConstructionTime.instance.editorRecalcuationRequired = 1;
         }
 
         private void PartStageabilityChangedEvent(Part p)
         {
-            KerbalConstructionTime.instance.editorRecalcuationRequired = true;
+            KerbalConstructionTime.instance.editorRecalcuationRequired = 1;
         }
 
         //public ApplicationLauncherButton KCTButtonStock = null;

@@ -171,7 +171,7 @@ namespace KerbalConstructionTime
             StartCoroutine(overrider.OnContextMenuSpawn());
         }
 
-        public bool editorRecalcuationRequired;
+        public int editorRecalcuationRequired;
         public int updateRateThrottle;
 
         public static KerbalConstructionTime instance;
@@ -478,10 +478,10 @@ namespace KerbalConstructionTime
 
         private void EditorRecalculation()
         {
-            if (editorRecalcuationRequired && !KCT_GUI.PrimarilyDisabled)
+            if (editorRecalcuationRequired > 0 && !KCT_GUI.PrimarilyDisabled)
             {
                 KCT_Utilities.RecalculateEditorBuildTime(EditorLogic.fetch.ship);
-                editorRecalcuationRequired = false;
+                editorRecalcuationRequired--;
             }
         }
 

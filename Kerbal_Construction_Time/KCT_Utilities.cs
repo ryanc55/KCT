@@ -1411,19 +1411,15 @@ namespace KerbalConstructionTime
             }
 
             double effCost = GetEffectiveCost(ship.Parts);
-       
             if (KCT_GameStates.EditorShipEditingMode)
             {
                 KCT_GameStates.EditorBuildTime = GetEditTime(effCost);
-            }
-            else
+            } else
             {
                 KCT_GameStates.EditorBuildTime = GetBuildTime(effCost);
             }
- 
-
             var kctVessel = new KCT_BuildListVessel(ship, EditorLogic.fetch.launchSiteName, effCost, KCT_GameStates.EditorBuildTime, EditorLogic.FlagURL);
-            
+
             KCT_GameStates.EditorIntegrationTime = KCT_MathParsing.ParseIntegrationTimeFormula(kctVessel);
             KCT_GameStates.EditorRolloutCosts = KCT_MathParsing.ParseRolloutCostFormula(kctVessel);
             KCT_GameStates.EditorIntegrationCosts = KCT_MathParsing.ParseIntegrationCostFormula(kctVessel);

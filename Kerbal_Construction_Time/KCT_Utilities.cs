@@ -1413,8 +1413,15 @@ namespace KerbalConstructionTime
             double effCost = GetEffectiveCost(ship.Parts);
             if (KCT_GameStates.EditorShipEditingMode)
             {
-                KCT_GameStates.EditorBuildTime = GetEditTime(effCost);
-            } else
+                KCT_GameStates.EditorBuildTime = GetBuildTime(effCost + KCT_GUI.originalCostNow);
+                KCT_GUI.newBP = GetEditTime(effCost);
+                var newVessel = new KCT_BuildListVessel(ship, EditorLogic.fetch.launchSiteName, effCost, KCT_GUI.newBP, EditorLogic.FlagURL);
+                KCT_GUI.newIP = KCT_MathParsing.ParseIntegrationTimeFormula(newVessel);
+                KCT_GUI.origBPRemaining = GetBuildTime(KCT_GUI.originalCostNow);
+                var origVessel = new KCT_BuildListVessel(ship, EditorLogic.fetch.launchSiteName, KCT_GUI.originalCostNow, KCT_GUI.origBPRemaining, EditorLogic.FlagURL);
+                KCT_GUI.origIntRemaining = KCT_MathParsing.ParseIntegrationTimeFormula(origVessel);         
+            }
+            else
             {
                 KCT_GameStates.EditorBuildTime = GetBuildTime(effCost);
             }

@@ -346,14 +346,15 @@ namespace KerbalConstructionTime
         public static Dictionary<uint, PartData> OriginalParts = new Dictionary<uint, PartData>();
         public static double originalCost = -1;
         public static double originalCostNow = 0;
-        private static double originalCostLast = 1;
         private static double origBP = 0;
         private static double origBT = 0;
         private static double finishedShipBP = -1;
         private static double originalTimeLeft = 0;
         public static double origBPRemaining = 0;
-        private static double percentRemaining = 1;
-        public static double oldEditPenalty = 0;
+        public static double origIntRemaining = 0;
+        public static double newBP = 0;
+        public static double newIP = 0;
+
         public static void DrawEditorGUI(int windowID)
         {
             if (EditorLogic.fetch == null)
@@ -457,22 +458,16 @@ namespace KerbalConstructionTime
                 KCT_BuildListVessel ship = KCT_GameStates.editedVessel;
                 if (finishedShipBP < 0)
                 {
+                  //  yield return new WaitForSeconds(1f);
                     origBP = ship.buildPoints;
                     origBT = origBP + ship.integrationPoints;
-
-                    
-                    Debug.Log($"[RyanKCT] originalTimeLeft {originalTimeLeft}  origBp: {origBP} ship.integrationPoints {ship.integrationPoints}  ship.progress {ship.progress}");
-                    // Initialize original list of part costs.  Need to do this from saved nodes as initial VAB values for proc parts are wrong.
                     finishedShipBP = KCT_Utilities.GetBuildTime(ship.ExtractedPartNodes);
                     origBPRemaining = finishedShipBP;
-                    oldEditPenalty = origBP - finishedShipBP;
                     originalTimeLeft = origBT - ship.progress;
                     originalCostNow = originalCost;
-                    originalCostLast = originalCostNow;
                 }
 
-                double newBP = KCT_GameStates.EditorBuildTime;
-                double newBuildTime = newBP + KCT_GameStates.EditorIntegrationTime;
+                double newBuildTime = newBP + newIP;
                 double progress;
                 double percentComplete = 1;
                 if (ship.isFinished) progress = origBT;
@@ -480,17 +475,22 @@ namespace KerbalConstructionTime
                     progress = ship.progress;
                     percentComplete = progress / origBT;
                 }
-                double progressRemaining = progress * percentRemaining;
-                if (!ship.isFinished && originalCost != 0 && originalCostLast != originalCostNow)
+
+                double originalTimeRemaining = origBPRemaining + origIntRemaining;
+                double progressRemaining = originalTimeRemaining * percentComplete;
+                originalTimeLeft = originalTimeRemaining - progressRemaining;
+                if (progressRemaining > newBuildTime) {
+                    progressRemaining -= newBuildTime;
+                } else  // We'll treat this as a new build
                 {
-                    percentRemaining = originalCostNow / originalCost;
-                    progressRemaining = progress * percentRemaining;
-                    origBPRemaining = KCT_Utilities.GetBuildTime(originalCostNow);
-                    var kctVessel = new KCT_BuildListVessel(EditorLogic.fetch.ship, EditorLogic.fetch.launchSiteName, originalCostNow, origBPRemaining + oldEditPenalty, EditorLogic.FlagURL); 
-                    double origIntRemainig = KCT_MathParsing.ParseIntegrationTimeFormula(kctVessel);
-                    originalTimeLeft = origBPRemaining + oldEditPenalty + origIntRemainig - progressRemaining;
-                    originalCostLast = originalCostNow;  // Opitmization so we don't run this loop each update.
+                    progressRemaining = 0;
+                    originalTimeLeft = 0;
                 }
+
+                double totalTime = KCT_GameStates.EditorBuildTime + KCT_GameStates.EditorIntegrationTime - progressRemaining;
+
+
+
                 KCT_BuildListVessel.ListType type = EditorLogic.fetch.launchSiteName == "LaunchPad" ? KCT_BuildListVessel.ListType.VAB : KCT_BuildListVessel.ListType.SPH;
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Build Times at ");
@@ -509,18 +509,26 @@ namespace KerbalConstructionTime
                         bR = rates[rateIndexHolder];
                         buildRateForDisplay = bR.ToString();
                     }
+
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Original:", GUILayout.Width(50));
-                    GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime((originalTimeLeft) / bR)}");
+                    if (progressRemaining == 0)
+                    {
+                        GUILayout.Label("Starting new build.");
+                    }
+                    else
+                    {
+                        GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime((originalTimeLeft) / bR)}");
+                    }
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Added:", GUILayout.Width(50));
-                    GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime(newBuildTime / bR)}");
+                    GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime((totalTime - originalTimeLeft) / bR)}");
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GUILayout.Label($"Total:", GUILayout.Width(50));
-                    GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime((originalTimeLeft + newBuildTime) / bR)}");
+                    GUILayout.Label($"{MagiCore.Utilities.GetFormattedTime(totalTime / bR)}");
                     GUILayout.EndHorizontal();
                 }
                 else
@@ -536,7 +544,7 @@ namespace KerbalConstructionTime
                     finishedShipBP = -1;
                     KCT_Utilities.AddFunds(ship.GetTotalCost(), TransactionReasons.VesselRollout);
                     double effCost = originalCostNow + KCT_Utilities.GetEffectiveCost(EditorLogic.fetch.ship.Parts);
-                    KCT_BuildListVessel newShip = KCT_Utilities.AddVesselToBuildList("", newBP + origBPRemaining + oldEditPenalty, effCost);
+                    KCT_BuildListVessel newShip = KCT_Utilities.AddVesselToBuildList("", KCT_GameStates.EditorBuildTime, effCost);
                     if (newShip == null)
                     {
                         KCT_Utilities.SpendFunds(ship.GetTotalCost(), TransactionReasons.VesselRollout);

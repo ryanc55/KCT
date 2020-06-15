@@ -458,7 +458,7 @@ namespace KerbalConstructionTime
                 KCT_BuildListVessel ship = KCT_GameStates.editedVessel;
                 if (finishedShipBP < 0)
                 {
-                  //  yield return new WaitForSeconds(1f);
+                    OriginalParts.Clear();
                     origBP = ship.buildPoints;
                     origBT = origBP + ship.integrationPoints;
                     finishedShipBP = KCT_Utilities.GetBuildTime(ship.ExtractedPartNodes);
@@ -479,9 +479,8 @@ namespace KerbalConstructionTime
                 double originalTimeRemaining = origBPRemaining + origIntRemaining;
                 double progressRemaining = originalTimeRemaining * percentComplete;
                 originalTimeLeft = originalTimeRemaining - progressRemaining;
-                if (progressRemaining > newBuildTime) {
-                    progressRemaining -= newBuildTime;
-                } else  // We'll treat this as a new build
+                progressRemaining = KCT_GameStates.EditorBuildTime + KCT_GameStates.EditorIntegrationTime - newBuildTime - originalTimeLeft;
+                if (progressRemaining < 0) //Start new build if that is cheaper.
                 {
                     progressRemaining = 0;
                     originalTimeLeft = 0;
@@ -561,7 +560,6 @@ namespace KerbalConstructionTime
                     GamePersistence.SaveGame("persistent", HighLogic.SaveFolder, SaveMode.OVERWRITE);
 
                     KCT_GameStates.EditorShipEditingMode = false;
-                    OriginalParts.Clear();
 
                     InputLockManager.RemoveControlLock("KCTEditExit");
                     InputLockManager.RemoveControlLock("KCTEditNew");
@@ -575,7 +573,6 @@ namespace KerbalConstructionTime
                 {
                     KCTDebug.Log("Edits cancelled.");
                     finishedShipBP = -1;
-                    OriginalParts.Clear();
                     KCT_GameStates.EditorShipEditingMode = false;
 
                     InputLockManager.RemoveControlLock("KCTEditExit");

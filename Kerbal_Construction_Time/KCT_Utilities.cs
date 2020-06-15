@@ -155,7 +155,7 @@ namespace KerbalConstructionTime
                     {
                         KCT_GUI.PartData originalPart;
                         uint bestMatch = 0;
-                        if (tmpOriginalParts.TryGetValue(p.persistentId, out originalPart))  //This is not technically needed, but may be more accurate for standard use case.
+                        if (tmpOriginalParts.TryGetValue(p.persistentId, out originalPart))  
                         {
                             bestMatch = p.persistentId;
                         } else
@@ -164,8 +164,8 @@ namespace KerbalConstructionTime
                             foreach (KeyValuePair<uint, KCT_GUI.PartData> tOP in tmpOriginalParts) {
                                 if (p.name == tOP.Value.name)
                                 {
-                                    double tCostDiff = Math.Abs(tOP.Value.effCost - effectiveCost);
-                                    if (tCostDiff < costDiff){
+                                    double tCostDiff = Math.Abs((tOP.Value.effCost / globalMultiplier) - effectiveCost);
+                                    if (tCostDiff < costDiff && (tCostDiff/effectiveCost) < .1){
                                         bestMatch = tOP.Key;
                                         costDiff = tCostDiff;
                                     }

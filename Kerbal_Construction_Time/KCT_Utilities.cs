@@ -91,7 +91,7 @@ namespace KerbalConstructionTime
             double finalBP = KCT_MathParsing.GetStandardFormulaValue("EditBP", formulaParams);
             return finalBP;
         }
-
+        public static double origGlobalMulitiplier = 1;
         public static double GetEffectiveCost(List<Part> parts)
         {
 
@@ -102,7 +102,8 @@ namespace KerbalConstructionTime
 
             List<string> globalVariables = new List<string>();
             bool newShip = IsShipNew();
-            double globalMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetGlobalVariable(globalVariables);
+            double originalCostNow = 0;
+
             Dictionary<uint, KCT_GUI.PartData> tmpOriginalParts = new Dictionary<uint, KCT_GUI.PartData>(KCT_GUI.OriginalParts);
             foreach (Part p in parts)
             {
@@ -164,7 +165,7 @@ namespace KerbalConstructionTime
                             foreach (KeyValuePair<uint, KCT_GUI.PartData> tOP in tmpOriginalParts) {
                                 if (p.name == tOP.Value.name)
                                 {
-                                    double tCostDiff = Math.Abs((tOP.Value.effCost / globalMultiplier) - effectiveCost);
+                                    double tCostDiff = Math.Abs(tOP.Value.effCost - effectiveCost);
                                     if (tCostDiff < costDiff && (tCostDiff/effectiveCost) < .1){
                                         bestMatch = tOP.Key;
                                         costDiff = tCostDiff;
@@ -177,8 +178,7 @@ namespace KerbalConstructionTime
                             if (tmpOriginalParts.TryGetValue(bestMatch, out originalPart))
                             {
                                 double thisPartCost = Math.Min(originalPart.effCost, effectiveCost);
-                                KCT_GUI.originalCostNow += thisPartCost * globalMultiplier;
-                                effectiveCost -= thisPartCost;
+                                originalCostNow += thisPartCost;
                                 tmpOriginalParts.Remove(bestMatch);
                             }
                         }
@@ -190,7 +190,10 @@ namespace KerbalConstructionTime
                 totalEffectiveCost += effectiveCost;
             }
 
-            return totalEffectiveCost * globalMultiplier;
+            double globalMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetGlobalVariable(globalVariables);
+            KCT_GUI.originalCostNow = originalCostNow * globalMultiplier;
+            
+            return totalEffectiveCost * globalMultiplier - originalCostNow * origGlobalMulitiplier;
         }
 
         private static bool IsShipNew()
@@ -217,8 +220,8 @@ namespace KerbalConstructionTime
 
             double totalEffectiveCost = 0;
             List<string> globalVariables = new List<string>();
-            bool newShip = IsShipNew();
-            double globalMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetGlobalVariable(globalVariables);
+            double originalCostNow = 0;
+            bool newship = IsShipNew();
 
             foreach (ConfigNode p in parts)
             {
@@ -289,22 +292,19 @@ namespace KerbalConstructionTime
                 {
                     uint pId = 0;
                     uint.TryParse(p.GetValue("persistentId"), out pId);
-                    if (newShip) 
+                    if (newship) 
                     {
                         KCT_GUI.PartData newPart = new KCT_GUI.PartData();
                         newPart.name = name;
                         newPart.effCost = effectiveCost;
                         KCT_GUI.OriginalParts.Add(pId , newPart);
-                        KCT_GUI.originalCost += effectiveCost * globalMultiplier;
-                        //effectiveCost = 0;
                     }
                     else
                     {
                         KCT_GUI.PartData foundPart;
                         if (KCT_GUI.OriginalParts.TryGetValue(pId, out foundPart))
                         {
-                            KCT_GUI.originalCostNow += Math.Max(effectiveCost, foundPart.effCost) * globalMultiplier;
-                            effectiveCost -= foundPart.effCost;
+                            originalCostNow += Math.Max(effectiveCost, foundPart.effCost);
                         } //else add search by name if we need it. For now skipping for confignode overload.
                     }
                 }
@@ -312,8 +312,12 @@ namespace KerbalConstructionTime
                 if (effectiveCost < 0) effectiveCost = 0;
                 totalEffectiveCost += effectiveCost;
             }
-
-            return totalEffectiveCost * globalMultiplier;
+            double globalMultiplier = KCT_PresetManager.Instance.ActivePreset.partVariables.GetGlobalVariable(globalVariables);
+            if (newship)
+            {
+                origGlobalMulitiplier = globalMultiplier;
+            }
+            return totalEffectiveCost * globalMultiplier - originalCostNow * origGlobalMulitiplier;
         }
 
         public static string PartNameFromNode(ConfigNode part)
